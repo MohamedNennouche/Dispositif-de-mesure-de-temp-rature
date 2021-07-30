@@ -1,0 +1,467 @@
+//=========================================================================================Test RTC DS1307
+//----------------------------------------------Includes Libraries
+#include "RTClib.h" //--> Download RTClib.h: https://github.com/adafruit/RTClib
+//----------------------------------------------
+
+RTC_DS1307 rtc; //--> Initialize RTC_DS1307
+
+void setup() {
+  // put your setup code here, to run once:
+
+  Serial.begin(9600);
+  Serial.println("Initializing RTC DS1307...");
+  delay(100);
+
+  //----------------------------------------------Initializing RTC DS1307
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+  //----------------------------------------------
+
+  Serial.println("Successfully Initializing the RTC DS1307");
+  Serial.println();
+
+  Serial.println("Starting to run RTC DS1307...");
+  delay(100);
+
+  //----------------------------------------------Checks whether the DS1307 RTC can be run or not
+  if (! rtc.isrunning()) {
+    Serial.println("RTC is NOT running!");
+    // following line sets the RTC to the date & time this sketch was compiled (Set the time and date based on your computer time and date)
+    // rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //-> If that doesn't work, use this line of code outside of "if (! rtc.isrunning())"
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  }
+  //----------------------------------------------
+
+  //----------------------------------------------Set the Date and Time on the DS1307 RTC
+  Serial.println("Setting the Date and Time...");
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //-> sets the RTC to the date & time this sketch was compiled (Set the time and date based on your computer time and date)
+  //rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0)); //--> Set Date and Time manually
+  delay(100);
+  Serial.println("Successfully Setting Date and Time");
+  Serial.println();
+  // If the time and date are successfully set, then deactivate the code line (make the code a comment), then re-upload the code.
+  // if not done then the time and date will return to the beginning when it was set when arduino is reset or restarted.
+  //----------------------------------------------
+
+  Serial.println("Successfully running RTC DS1307");
+  delay(100);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  //----------------------------------------------Printing Date and Time to Serial Monitor
+  DateTime now = rtc.now();
+  Serial.print("Date ");
+  Serial.print(now.day(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.year(), DEC);
+  Serial.print(" | Time ");   
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
+  delay(1000);
+  //----------------------------------------------
+}
+//=========================================================================================
+
+
+
+
+
+
+//=========================================================================================Test DHT11
+//----------------------------------------------Includes Libraries
+#include "DHT.h"
+//----------------------------------------------
+
+#define DHTPIN 2 //--> Arduino pin connected to DHT11 Pin Out   
+#define DHTTYPE DHT11 //--> The type of DHT sensor used  
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  // put your setup code here, to run once:
+
+  Serial.begin(9600);
+  delay(100);
+  
+  //----------------------------------------------Starting up the DHT11 Sensor
+  Serial.println("Start DHT11");
+  dht.begin();
+  delay(100);
+  Serial.println();
+  //----------------------------------------------
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  //----------------------------------------------Get or update Temperature and Humidity Values
+  // Reading temperature or humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  int h = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  float t = dht.readTemperature();
+  //----------------------------------------------
+
+  //----------------------------------------------Check if any reads failed and exit early (to try again).
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read Data from DHT sensor!");
+    delay(500);
+    return;
+  }
+  //----------------------------------------------
+
+  //----------------------------------------------Printing Temperature and Humidity Values to Serial Monitor
+  Serial.print("Temperature : ");
+  Serial.print(h);
+  Serial.print(" | Humidity : ");
+  Serial.println(t);
+  delay(2000);
+  //----------------------------------------------
+}
+//=========================================================================================
+
+
+
+
+
+
+//=========================================================================================Test Micro SD Card Module
+/*
+  Reference Code from :
+  
+  SD card test 
+
+  This example shows how use the utility libraries on which the'
+  SD library is based in order to get info about your SD card.
+  Very useful for testing a card when you're not sure whether its working or not.
+
+  The circuit:
+  * SD card attached to SPI bus as follows:
+  ** UNO:  MOSI - pin 11, MISO - pin 12, CLK - pin 13, CS - pin 4 (CS pin can be changed)
+     and pin #10 (SS) must be an output
+  ** Mega:  MOSI - pin 51, MISO - pin 50, CLK - pin 52, CS - pin 4 (CS pin can be changed)
+     and pin #52 (SS) must be an output
+  ** Leonardo: Connect to hardware SPI via the ICSP header
+
+  Pin 4 used here for consistency with other Arduino examples
+
+  created  28 Mar 2011  by Limor Fried 
+  modified 9 Apr 2012   by Tom Igoe
+*/
+//----------------------------------------------Includes Libraries
+#include <SD.h>
+#include <SPI.h>
+//----------------------------------------------
+
+Sd2Card card; //--> Sd2Card Initialization
+SdVolume volume; //--> SdVolume Initialization
+SdFile root; //--> SdFile Initialization
+
+const int chipSelect = 4; //--> chipSelect (CS) Pin
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+
+  Serial.print("Initializing Micro SD card...");
+  Serial.println();
+
+  //----------------------------------------------Conditions to make sure the Micro SD card is readable.
+  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
+    Serial.println("Initialization failed !");
+    Serial.println("* Is the Micro SD card inserted ?");
+    Serial.println("* Is the wiring correct ?");
+    Serial.println("* Check your cable, maybe one of the cables is damaged !");
+    while (1);
+  } else {
+    Serial.println();
+    Serial.println("Initialize successful");
+  }
+  //----------------------------------------------
+
+  Serial.println();
+  Serial.print("Micro SD card type : ");
+
+  //----------------------------------------------Print any type of Micro SD card
+  switch(card.type()) {
+    case SD_CARD_TYPE_SD1:
+    Serial.println("SD1");
+    break;
+    case SD_CARD_TYPE_SD2:
+    Serial.println("SD2");
+    break;
+    case SD_CARD_TYPE_SDHC:
+    Serial.println("SDHC");
+    break;
+    default:
+    Serial.println("SD card type unknown !!!"); 
+  }
+  //----------------------------------------------
+
+  //----------------------------------------------Conditions for finding the type of file system Micro SD Card
+  if (!volume.init(card)) {
+    Serial.println("Couldn't find the FAT16 / FAT32 file system !!!");
+    Serial.println("Make sure the card has been formatted on the FAT16 / FAT32 file system.");
+    while (1);
+  }
+  //----------------------------------------------
+
+  //----------------------------------------------Prints the FAT type of Micro SD card and its sizes.
+  uint32_t volumesize;
+  
+  Serial.println();
+  Serial.print("Volume type is FAT");
+  Serial.println(volume.fatType(), DEC);
+  Serial.println();
+
+  volumesize = volume.blocksPerCluster();
+  volumesize *= volume.clusterCount();
+
+  volumesize *= 512;   
+  Serial.print("Volume size (bytes): ");
+  Serial.println(volumesize);
+
+  Serial.print("Volume size (Kbytes): ");
+  volumesize /= 1024;
+  Serial.println(volumesize);
+
+  Serial.print("Volume size (Mbytes): ");
+  volumesize /= 1024;
+  Serial.println(volumesize);
+
+  Serial.print("Volume size (Gbytes): ");
+  float vsg = volumesize;
+  float VG  = vsg / 1024;
+  Serial.println(VG);
+  //----------------------------------------------
+
+  //----------------------------------------------Printing Files on the Micro SD Card
+  Serial.println();
+  Serial.println("Files found on the Micro SD card (name, date and size in bytes) : ");
+
+  root.openRoot(volume);
+
+  root.ls(LS_R | LS_DATE | LS_SIZE);
+  //----------------------------------------------
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+}
+//=========================================================================================
+
+
+
+
+
+
+//=========================================================================================Arduino Data Logger Micro SD Card
+//----------------------------------------------Includes Libraries
+#include "RTClib.h"
+
+#include "DHT.h"
+
+#include <SD.h>
+#include <SPI.h>
+//----------------------------------------------
+
+RTC_DS1307 rtc; //--> Initialize RTC_DS1307
+
+#define DHTPIN 2 //--> Arduino pin connected to DHT11 Pin Out   
+#define DHTTYPE DHT11 //--> The type of DHT sensor used  
+DHT dht(DHTPIN, DHTTYPE);
+
+File myFile; //--> File Initialization
+const int chipSelect = 4; //--> chipSelect (CS) Pin
+
+unsigned long previousMillis = 0; //--> will store last time was updated
+const long interval = 1000; //--> interval (1000 = 1 second)
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+
+  Serial.println("Initializing RTC DS1307...");
+  delay(100);
+
+  //----------------------------------------------Initializing RTC DS1307
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+  //----------------------------------------------
+
+  Serial.println("Successfully Initializing the RTC DS1307");
+  Serial.println();
+
+  Serial.println("Starting to run RTC DS1307...");
+  delay(100);
+
+  //----------------------------------------------Checks whether the DS1307 RTC can be run or not
+  if (! rtc.isrunning()) {
+    Serial.println("RTC is NOT running!");
+    // following line sets the RTC to the date & time this sketch was compiled (Set the time and date based on your computer time and date)
+    // rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //-> If that doesn't work, use this line of code outside of "if (! rtc.isrunning())"
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  }
+  //----------------------------------------------
+
+  //----------------------------------------------Set the Date and Time on the DS1307 RTC
+  // following line sets the RTC to the date & time this sketch was compiled (Set the time and date based on your computer time and date)
+  //Serial.println("Setting the Date and Time...");
+  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //-> Use this line of code if it doesn't work in "if (! rtc.isrunning())"
+  //rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  //delay(100);
+  //Serial.println("Successfully Setting Date and Time");
+  //Serial.println();
+  // If the time and date are successfully set, then deactivate the code line (make the code a comment), then re-upload the code.
+  // if not done then the time and date will return to the beginning when it was set when arduino is reset or restarted.
+  //----------------------------------------------
+
+  Serial.println("Successfully running RTC DS1307");
+  delay(100);
+
+  //----------------------------------------------Starting up the DHT11 Sensor
+  Serial.println("Start DHT11");
+  dht.begin();
+  delay(100);
+  Serial.println();
+  //----------------------------------------------
+
+  //----------------------------------------------Initializing Micro SD Card
+  Serial.println("Initializing Micro SD Card...");
+  delay(100);
+
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Initialization failed!");
+    while (1);
+  }
+
+  Serial.println("Successfully Initializing Micro SD Card");
+  Serial.println();
+  delay(100);
+  //----------------------------------------------
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  
+  //___________________________________________________________________________________Millis to update the Date, Time, Temperature and Humidity
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+
+    DateTime now = rtc.now(); //--> Get or update the Date and Time
+
+    //----------------------------------------------Get or update Temperature and Humidity Values
+    // Reading temperature or humidity takes about 250 milliseconds!
+    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+    int h = dht.readHumidity();
+    // Read temperature as Celsius (the default)
+    float t = dht.readTemperature();
+    //----------------------------------------------
+
+    //----------------------------------------------Check if any reads failed and exit early (to try again).
+    if (isnan(h) || isnan(t)) {
+      Serial.println("Failed to read Data from DHT sensor!");
+      delay(500);
+      return;
+    }
+    //----------------------------------------------
+
+    //___________________________________________________________________________________Conditions for writing data to a Micro SD Card
+    // Data Date, Time, Temperature and Humidity will be written to the Micro SD Card if Seconds are worth 0,5,10,15,20 and so on
+    if (now.second() %5 == 0) {
+      Serial.println("----");
+      //----------------------------------------------Printing Date and Time to Serial Monitor
+      Serial.print(now.day(), DEC);
+      Serial.print('/');
+      Serial.print(now.month(), DEC);
+      Serial.print('/');
+      Serial.print(now.year(), DEC);
+      Serial.print(" ");   
+      Serial.print(now.hour(), DEC);
+      Serial.print(':');
+      Serial.print(now.minute(), DEC);
+      Serial.print(':');
+      Serial.print(now.second(), DEC);
+      Serial.println();
+      //----------------------------------------------
+
+      //----------------------------------------------Printing Temperature and Humidity Values to Serial Monitor
+      Serial.print("Temperature : ");
+      Serial.print(h);
+      Serial.print(" | Humidity : ");
+      Serial.println(t);
+      Serial.println();
+      //----------------------------------------------
+    
+      //___________________________________________________________________________________Write to Micro SD Card
+      //----------------------------------------------Opening files that have been specified on the Micro SD Card
+      // open the file. note that only one file can be open at a time,
+      // so you have to close this one before opening another.
+      myFile = SD.open("DHT11Log.txt", FILE_WRITE);
+      //----------------------------------------------
+    
+      //----------------------------------------------Writing Data to the specified file on the Micro SD Card
+      // if the file opened okay, write to it:
+      if (myFile) {
+        Serial.println("Writing to DHT11Log.txt...");
+        
+        //----------------------------------------------Writing Date Data to Micro SD Card
+        myFile.print(now.day());
+        myFile.print("-");
+        myFile.print(now.month());
+        myFile.print("-");
+        myFile.print(now.year());
+        //----------------------------------------------
+        
+        myFile.print(","); //--> Write the delimiter between the data in the form of a comma character to the Micro SD Card
+
+        //----------------------------------------------Writing Time Data to Micro SD Card
+        myFile.print(now.hour());
+        myFile.print(":");
+        myFile.print(now.minute());
+        myFile.print(":");
+        myFile.print(now.second());
+        //----------------------------------------------
+    
+        myFile.print(","); //--> Write the delimiter between the data in the form of a comma character to the Micro SD Card
+        
+        myFile.print(t); //--> Writing Temperature Data to Micro SD Card
+    
+        myFile.print(","); //--> Write the delimiter between the data in the form of a comma character to the Micro SD Card
+    
+        myFile.println(h); //--> Writing Humidity Data to Micro SD Card
+          
+        myFile.close(); //--> close the file
+        
+        Serial.println("Successfully writing Data to Micro SD Card");
+        Serial.println("----");
+        Serial.println();
+      } else {      
+        Serial.println("Error opening DHT11Log.txt"); //--> if the file didn't open, print an error
+      }
+      //----------------------------------------------
+      //___________________________________________________________________________________
+    }
+    //___________________________________________________________________________________
+  }
+  //___________________________________________________________________________________
+}
+//=========================================================================================
